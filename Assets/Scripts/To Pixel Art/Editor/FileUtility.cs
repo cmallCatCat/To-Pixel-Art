@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace To_Pixel_Art.Editor
+namespace To_Pixel_Art
 {
 	public static class FileUtility
 	{
