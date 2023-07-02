@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using To_Pixel_Art.Palettes;
 using To_Pixel_Art.Palettes.ExistPalette;
@@ -17,10 +18,11 @@ namespace To_Pixel_Art
 			// 初始化
 			Texture2D   texture2D  = null;
 			Texture2D[] texture2Ds = LoadTexturesFromPaths(texture2DPaths);
-			settings.Deconstruct(out int num, out PaletteType paletteType, out Palette palette, out int colorAmount,
-				out float bandwidth, out float brightness, out float saturation, out float hue, out float contrast,
-				out bool reduceNoise,
-				out int kernelSize, out float spatialFactor, out float colorFactor, out float effect);
+			settings.Deconstruct(
+				out int num, out PaletteType paletteType, out Palette palette, out int colorAmount,
+				out float bandwidth, out float edgeThreshold, out float brightness, out float saturation,
+				out float hue, out float contrast, out float polarization, out bool reduceNoise,
+				out float spatialSigma, out float colorSigma, out int filterRadius);
 			WorkerPalette worker;
 			switch (paletteType)
 			{
@@ -40,27 +42,28 @@ namespace To_Pixel_Art
 			for (int index = 0; index < texture2Ds.Length; index++)
 			{
 				texture2D = texture2Ds[index];
-				// 创建
+				// 创建与预处理
 				string    oldPath      = texture2DPaths[index];
 				Texture2D newTexture2D = new Texture2D(texture2D.width / num, texture2D.height / num);
-				// 预处理
 				texture2D = ImageColorAdjuster.AdjustImageColors(texture2D, brightness, contrast, hue, saturation);
-				// 取色
-				List<Color> finalPalette = worker.GetPalette(texture2D);
+				// 边缘处理
+				texture2D = ImageColorAdjuster.ApplyEdgeDetection(texture2D, edgeThreshold);
 				// 降噪
 				if (reduceNoise)
 				{
-					texture2D = ImageColorAdjuster.ReduceNoise(texture2D, kernelSize * 2 + 1, spatialFactor, colorFactor);
+					texture2D = ImageColorAdjuster.ApplyBilateralFilter(texture2D, spatialSigma, colorSigma, filterRadius);
 				}
+				// 取色
+				List<Color> finalPalette = worker.GetPalette(texture2D);
 				// 生成
-				PixelColorUtility.ApplyPalette(newTexture2D, texture2D, finalPalette, num, effect);
+				PixelColorUtility.ApplyPalette(newTexture2D, texture2D, finalPalette, num, polarization);
 				// 保存
 				if (!generate && index == 0)
 				{
-					return newTexture2D;
+					return newTexture2D; //
 				}
 				string newPath = ConvertPath(oldPath, targetPath);
-				Save(newPath, newTexture2D);
+				Save(newPath, newTexture2D); //
 			}
 			return texture2D;
 		}

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
+using Debug = UnityEngine.Debug;
 
 namespace To_Pixel_Art.Palettes.KMeansPalette
 {
@@ -18,7 +20,8 @@ namespace To_Pixel_Art.Palettes.KMeansPalette
 		{
 			List<Color> sample = PixelColorUtility.GetSample(texture2D, num);
 			Color[]     colors = KMeans.QuantizeColors(sample.ToArray(), colorAmount);
-			return colors.Distinct(new ColorEqualityComparer(0.01f)).ToList();
+			List<Color> list   = colors.Distinct(new ColorEqualityComparer(0.01f)).ToList();
+			return list;
 		}
 	}
 }

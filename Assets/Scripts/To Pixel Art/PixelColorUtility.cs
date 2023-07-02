@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.TestTools.Utils;
@@ -30,7 +31,7 @@ namespace To_Pixel_Art
 			return new Color(rAv, gAv, bAv, aAv);
 		}
 
-		public static Color FindClosestColor(Color average, List<Color> colorPalette, float effect)
+		public static Color FindClosestColor(Color average, List<Color> colorPalette, float polarization)
 		{
 			if (average.a == 0)
 			{
@@ -47,15 +48,15 @@ namespace To_Pixel_Art
 					minIndex = i;
 				}
 			}
-			return ColorPolarizationUtils.AdjustColor(colorPalette[minIndex], effect);
+			return ColorPolarizationUtils.AdjustColor(colorPalette[minIndex], polarization);
 		}
 
-		public static float Similarity(Color color1, Color color2)
+		public static float Similarity(Color average, Color color)
 		{
-			float difR = color1.r - color2.r;
-			float difG = color1.g - color2.g;
-			float difB = color1.b - color2.b;
-			return difR * difR + difG * difG + difB * difB;
+			float r = average.r - color.r;
+			float g = average.g - color.g;
+			float b = average.b - color.b;
+			return r * r + g * g + b * b;
 		}
 
 		public static List<Color> GetSample(Texture2D texture2D, int num)
@@ -68,15 +69,16 @@ namespace To_Pixel_Art
 
 		public static List<T> RemoveInfrequentElements<T>(List<T> list, IEqualityComparer<T> comparer)
 		{
-			int minAmount = list.Count / 4000;
-			
+			int minAmount = list.Count / 5000;
+
 			return list.GroupBy(item => item, comparer)
 				.Where(group => group.Count() >= minAmount)
 				.Select(group => group.Key)
 				.ToList();
 		}
 
-		public static void ApplyPalette(Texture2D newTexture2D, Texture2D texture2D, List<Color> palette, int num, float effect)
+		public static void ApplyPalette(
+			Texture2D newTexture2D, Texture2D texture2D, List<Color> palette, int num, float polarization)
 		{
 			Color[][] results = new Color[newTexture2D.width][];
 			for (int x = 0; x < newTexture2D.width; x++)
@@ -89,7 +91,7 @@ namespace To_Pixel_Art
 					if (block.Length > 0)
 					{
 						Color average = ToPixel(block);
-						average = FindClosestColor(average, palette, effect);
+						average = FindClosestColor(average, palette, polarization);
 						newTexture2D.SetPixel(x, y, average);
 						results[x][y] = average;
 					}

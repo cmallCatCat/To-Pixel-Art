@@ -1,0 +1,56 @@
+#pragma kernel BilateralFilterCS
+
+RWTexture2D<float4> Result;
+Texture2D<float4> Source;
+
+int _Width;
+int _Height;
+float _SpatialSigma;
+float _ColorSigma;
+int _FilterRadius;
+
+[numthreads(8, 8, 1)]
+void BilateralFilterCS(uint3 id : SV_DispatchThreadID)
+{
+    int x = id.x;
+    int y = id.y;
+
+    if (x >= _Width || y >= _Height)
+        return;
+
+    float2 currentPixel = float2(x, y);
+    float4 sumColors = 0.0;
+    float sumWeights = 0.0;
+
+    for (int filterY = -_FilterRadius; filterY <= _FilterRadius; ++filterY)
+    {
+        for (int filterX = -_FilterRadius; filterX <= _FilterRadius; ++filterX)
+        {
+            int neighborX = clamp(x + filterX, 0, _Width - 1);
+            int neighborY = clamp(y + filterY, 0, _Height - 1);
+
+            float2 neighborPixel = float2(neighborX, neighborY);
+            float spatialDiff = distance(currentPixel, neighborPixel);
+            spatialDiff *= spatialDiff; // Square the difference
+            float4 colorDiff = Source[currentPixel] - Source[neighborPixel];
+
+            float spatialWeight = exp(-spatialDiff / (2.0 * _SpatialSigma * _SpatialSigma));
+            float colorWeight = exp(
+                -(colorDiff.r * colorDiff.r + colorDiff.g * colorDiff.g + colorDiff.b * colorDiff.b) / (2.0 *
+                    _ColorSigma * _ColorSigma));
+
+            float weight = spatialWeight * colorWeight;
+
+            sumWeights += weight;
+            sumColors += weight * Source[neighborPixel];
+        }
+    }
+
+    Result[id.xy] = sumColors / sumWeights;
+}
+
+float distanceSquared(float2 a, float2 b)
+{
+    float2 diff = a - b;
+    return dot(diff, diff);
+}

@@ -4,31 +4,24 @@ namespace To_Pixel_Art
 {
 	public static class ColorPolarizationUtils
 	{
-		public static float CloseToGray(Color color)
+		// 调整颜色亮度并使灰度颜色受到更强烈的影响
+		public static Color AdjustColor(Color color, float intensity)
 		{
-			float differenceRG = Mathf.Abs(color.r - color.g);
-			float differenceRB = Mathf.Abs(color.r - color.b);
-			float differenceGB = Mathf.Abs(color.g - color.b);
+			// 将 RGB 颜色转换为 HSL 颜色
+			Color.RGBToHSV(color, out float hue, out float saturation, out float value);
 
-			return Mathf.Max(differenceRG, differenceRB, differenceGB);
-		}
+			// 根据饱和度计算权重
+			float weight = 1 - saturation;
+			weight *= intensity;
 
-		public static Color AdjustColor(Color color, float effect)
-		{
-			float a = color.a;
-			// 计算颜色的亮度      
-			float brightness = (color.r + color.g + color.b) / 3;
+			// 根据权重调整明度/亮度
+			if (value > 0.5f)
+				value += weight * (1 - value);
+			else
+				value -= weight * value;
 
-			float closeToGray         = CloseToGray(color);
-			float closeToWhiteOrBlack = Mathf.Min(Mathf.Abs(brightness - 0f), Mathf.Abs(brightness - 1f)) * 2.5f;
-			float sum                 = closeToGray + closeToWhiteOrBlack;
-			float t                   = Mathf.Clamp01(sum * effect);
-			float targetBrightness    = Mathf.Lerp(brightness, brightness > 0.5f ? 1 : 0, t);
-			float scaleFactor         = targetBrightness / brightness;
-			color *= scaleFactor;
-
-			color.a = a;
-			return color;
+			// 将 HSL 颜色转换回 RGB 颜色
+			return Color.HSVToRGB(hue, saturation, value);
 		}
 	}
 }

@@ -9,8 +9,13 @@ namespace To_Pixel_Art.Editor
 {
 	public class PixelArt : EditorWindow
 	{
-		private Settings  settings = new Settings();
+		private Settings  settings;
 		private Texture2D previewImage;
+
+		private void Awake()
+		{
+			settings = Resources.Load<Settings>("DefaultSettings");
+		}
 
 		private Texture2D preview
 		{
@@ -25,7 +30,7 @@ namespace To_Pixel_Art.Editor
 		}
 
 		private string[] paths;
-		private ExtensionFilter[] extensions = new[]
+		private ExtensionFilter[] extensions =
 		{ new ExtensionFilter("Image Files", "jpg", "jpeg", "png") };
 		private string targetPath;
 
@@ -39,30 +44,41 @@ namespace To_Pixel_Art.Editor
 
 		private void OnGUI()
 		{
-			settings.num = EditorGUILayout.IntSlider(new GUIContent("Num", "Every Num pixels will be merged into one pixel"),
-				settings.num,
-				2, 20);
-			EditorGUILayout.Space();
+			EditorGUILayout.LabelField("Basic Settings", EditorStyles.boldLabel);
+			settings.num           = EditorGUILayout.IntSlider("Num", settings.num, 2, 20);
+			settings.edgeThreshold = EditorGUILayout.Slider("Edge Threshold", settings.edgeThreshold, 0.05f, 1.5f);
+			settings.paletteType   = (PaletteType)EditorGUILayout.EnumPopup("Palette Type", settings.paletteType);
+			switch (settings.paletteType)
+			{
+				case PaletteType.Existent:
+					settings.palette = (Palette)EditorGUILayout.EnumPopup("Palette", settings.palette);
+					break;
+				case PaletteType.KMeans:
+					settings.colorAmount = EditorGUILayout.IntSlider("Color Amount", settings.colorAmount, 2, 64);
+					break;
+				case PaletteType.MeanShift:
+					settings.bandwidth = EditorGUILayout.Slider("Bandwidth", settings.bandwidth, 0.03f, 0.25f);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 
-			DisplayAdvancedSettings();
-			EditorGUILayout.Space();
+			EditorGUILayout.LabelField("Color Adjustment", EditorStyles.boldLabel);
+			settings.brightness   = EditorGUILayout.Slider("Brightness", settings.brightness, 0f, 2f);
+			settings.saturation   = EditorGUILayout.Slider("Saturation", settings.saturation, 0f, 2f);
+			settings.hue          = EditorGUILayout.Slider("Hue", settings.hue, 0f, 2f);
+			settings.contrast     = EditorGUILayout.Slider("Contrast", settings.contrast, 0f, 2f);
+			settings.polarization = EditorGUILayout.Slider("Polarization", settings.polarization, 0f, 2f);
 
+			EditorGUILayout.LabelField("Reduce Noise", EditorStyles.boldLabel);
+			settings.reduceNoise = EditorGUILayout.Toggle("Reduce Noise", settings.reduceNoise);
+			if (settings.reduceNoise)
+			{
+				settings.spatialSigma = EditorGUILayout.Slider("Spatial Sigma", settings.spatialSigma, 0.5f, 5.0f);
+				settings.colorSigma   = EditorGUILayout.Slider("Color Sigma", settings.colorSigma, 0.1f, 0.5f);
+				settings.filterRadius = EditorGUILayout.IntSlider("Filter Radius", settings.filterRadius, 1, 10);
+			}
 			DisplayOutputAndPreview();
-		}
-
-		private void DisplayAdvancedSettings()
-		{
-			DisplayPaletteSettings();
-			DisplayAdjustmentSettings();
-			DisplayColorPolarization();
-		}
-
-		private void DisplayColorPolarization()
-		{
-			settings.polarization = EditorGUILayout.Slider(
-				new GUIContent("ColorPolarization"),
-				settings.polarization, 0.5f, 1.5f);
-			EditorGUILayout.Space();
 		}
 
 		private void DisplayOutputAndPreview()
@@ -80,10 +96,11 @@ namespace To_Pixel_Art.Editor
 
 			if (GUILayout.Button("Select"))
 			{
-				paths = StandaloneFileBrowser.StandaloneFileBrowser.OpenFilePanel("Select an image file", "C:\\Users\\Administrator\\Pictures",
+				paths = StandaloneFileBrowser.StandaloneFileBrowser.OpenFilePanel("Select an image file",
+					"C:\\Users\\Administrator\\Pictures",
 					extensions, true);
 			}
-			
+
 			if (GUILayout.Button("Preview"))
 			{
 				preview = MainLogic.Work(paths, targetPath, settings, false);
@@ -97,74 +114,6 @@ namespace To_Pixel_Art.Editor
 			EditorGUILayout.EndHorizontal();
 
 			DrawPreviewTexture();
-		}
-
-		private void DisplayAdjustmentSettings()
-		{
-			settings.brightness = EditorGUILayout.Slider(
-				new GUIContent("Brightness",
-					"The brightness of the new Texture."),
-				settings.brightness, 0f, 2f);
-			settings.saturation = EditorGUILayout.Slider(
-				new GUIContent("Saturation",
-					"The saturation of the new Texture."),
-				settings.saturation, 0f, 2f);
-			settings.hue = EditorGUILayout.Slider(
-				new GUIContent("Hue",
-					"The hue of the new Texture."),
-				settings.hue, 0f, 2f);
-			settings.contrast = EditorGUILayout.Slider(
-				new GUIContent("Contrast",
-					"The contrast of the new Texture."),
-				settings.contrast, 0f, 2f);
-			settings.reduceNoise= EditorGUILayout.BeginToggleGroup("Reduce Noise", settings.reduceNoise);
-			settings.kernelSize = EditorGUILayout.IntSlider(
-				new GUIContent("Kernel Size",
-					"The kernel size of the new Texture."),
-				settings.kernelSize, 1, 6);
-			settings.spatialFactor = EditorGUILayout.Slider(
-				new GUIContent("Spatial Factor",
-					"The spatial factor of the new Texture."),
-				settings.spatialFactor, 0f, 100f);
-			settings.colorFactor = EditorGUILayout.Slider(
-				new GUIContent("Color Factor",
-					"The color factor of the new Texture."),
-				settings.colorFactor, 0f, 200f);
-			EditorGUILayout.EndToggleGroup();
-
-			EditorGUILayout.Space();
-		}
-
-		private void DisplayPaletteSettings()
-		{
-			settings.paletteType = (PaletteType)EditorGUILayout.EnumPopup(
-				new GUIContent("Palette Strategy", "Which type of palette to use."),
-				settings.paletteType);
-			switch (settings.paletteType)
-			{
-				case PaletteType.Existent:
-					settings.palette = (Palette)EditorGUILayout.EnumPopup(
-						new GUIContent("Palette Type",
-							"How many colors are in the existent palette. Palettes with fewer colors tend to be more like early video games"),
-						settings.palette);
-					break;
-				case PaletteType.KMeans:
-					settings.colorAmount = EditorGUILayout.IntSlider(
-						new GUIContent("ColorAmount",
-							"How differences in two similar color can be accepted. Bigger value usually lead to less color and and vice versa."),
-						settings.colorAmount, 3, 64);
-					break;
-				case PaletteType.MeanShift:
-					settings.bandwidth = EditorGUILayout.Slider(
-						new GUIContent("Bandwidth",
-							"The bandwidth of the Mean Shift algorithm."),
-						settings.bandwidth, 0.03f, 0.25f);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-
-			EditorGUILayout.Space();
 		}
 
 		private void DrawPreviewTexture()
