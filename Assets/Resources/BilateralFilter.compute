@@ -36,8 +36,8 @@ void BilateralFilterCS(uint3 id : SV_DispatchThreadID)
 
             float spatialWeight = exp(-spatialDiff / (2.0 * _SpatialSigma * _SpatialSigma));
             float colorWeight = exp(
-                -(colorDiff.r * colorDiff.r + colorDiff.g * colorDiff.g + colorDiff.b * colorDiff.b) / (2.0 *
-                    _ColorSigma * _ColorSigma));
+                -(colorDiff.r * colorDiff.r + colorDiff.g * colorDiff.g + colorDiff.b * colorDiff.b) /
+                (2.0 *_ColorSigma * _ColorSigma));
 
             float weight = spatialWeight * colorWeight;
 

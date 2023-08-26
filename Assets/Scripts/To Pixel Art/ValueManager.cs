@@ -1,102 +1,95 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Accord.IO;
-using To_Pixel_Art.Palettes.ExistPalette;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace To_Pixel_Art
 {
 	public class ValueManager : MonoBehaviour
 	{
-		private Dictionary<string, float>      settings   = new Dictionary<string, float>();
-		private Dictionary<string, Selectable> uiElements = new Dictionary<string, Selectable>();
+		private Dictionary<string, float> settings = new Dictionary<string, float>();
+		private Dictionary<string, float> changed  = new Dictionary<string, float>();
 
-		public void SetSettings(Dictionary<string, float> newSettings)
-		{
-			foreach ((string key, float value) in newSettings) { }
-		}
+		private Dictionary<string, UnityAction<float>> onValueChanged = new Dictionary<string, UnityAction<float>>();
 
-		public void Register<T>(T control, string settingName) where T : Selectable
-		{
-			if (!uiElements.ContainsKey(settingName))
-			{
-				uiElements.Add(settingName, control);
-				ResetValue(control, settingName);
-			}
-		}
+		private Dictionary<string, UnityAction> buttonDown = new Dictionary<string, UnityAction>();
 
-		public void UnRegister(string settingName)
-		{
-			uiElements.Remove(settingName);
-		}
+		public string outPutPath = "C:\\Users\\Administrator\\Pictures";
 
-		public float GetDefaultValue(string settingName)
-		{
-			return settings[settingName];
-		}
+		public string selectImage;
 
 		public void ResetValue<T>(T control, string settingName) where T : Selectable
 		{
-			switch (control)
-			{
-				case Slider slider:
-				{
-					float value = GetDefaultValue(settingName);
-					slider.value = value;
-					slider.onValueChanged.Invoke(value);
-					break;
-				}
-				case Dropdown dropdown:
-				{
-					int value = (int)GetDefaultValue(settingName);
-					dropdown.value = value;
-					dropdown.onValueChanged.Invoke(value);
-					break;
-				}
-				case Toggle toggle:
-				{
-					bool value = GetDefaultValue(settingName) > 0f;
-					toggle.isOn = value;
-					toggle.onValueChanged.Invoke(value);
-					break;
-				}
-				default:
-					Debug.LogError($"Unsupported control type: {typeof(T)}");
-					break;
-			}
-		}
-		
-		public void ResetAll()
-		{
-			foreach (KeyValuePair<string, Selectable> pair in uiElements)
-			{
-				ResetValue(pair.Value, pair.Key);
-			}
+			SetChangedValue(settingName, settings[settingName]);
 		}
 
-		public T GetControl<T>(string settingName) where T : Selectable
+		public void RegisterValueChanged(string settingName, UnityAction<float> callback)
 		{
-			if (uiElements.TryGetValue(settingName, out Selectable control))
+			if (onValueChanged.TryGetValue(settingName, out UnityAction<float> action))
 			{
-				return control as T;
+				onValueChanged[settingName] -= callback;
+				onValueChanged[settingName] += callback;
 			}
 			else
 			{
-				Debug.LogError($"Control not found for setting: {settingName}");
-				return null;
+				onValueChanged[settingName] = callback;
 			}
 		}
 
-		private static ValueManager valueManager;
+		public void RegisterButtonDown(string name, UnityAction callback)
+		{
+			if (buttonDown.TryGetValue(name, out UnityAction action))
+			{
+				buttonDown[name] -= callback;
+				buttonDown[name] += callback;
+			}
+			else
+			{
+				buttonDown[name] = callback;
+			}
+		}
 
-		public static ValueManager Instance =>
-			valueManager == null ? valueManager = FindObjectOfType<ValueManager>() : valueManager;
+		public void ButtonDown(string name)
+		{
+			if (buttonDown.TryGetValue(name, out UnityAction action))
+			{
+				action?.Invoke();
+			}
+		}
+
+		public void UnRegisterValueChanged(string settingName, UnityAction<float> callback)
+		{
+			onValueChanged[settingName] -= callback;
+		}
+
+		public void SetChangedValue(string settingName, float value)
+		{
+			changed[settingName] = value;
+			if (onValueChanged.TryGetValue(settingName, out UnityAction<float> action))
+			{
+				action?.Invoke(value);
+			}
+		}
+
+		public void SetSettingsValue(string settingName, float value)
+		{
+			settings[settingName] = value;
+		}
 
 		public void SetDefaults(string key, float value)
 		{
-			settings[key] = value;
+			SetSettingsValue(key, value);
+			SetChangedValue(key, value);
 		}
+
+		public string GetValueString()
+		{
+			return DataManager.ConvertData(changed);
+		}
+
+		private static ValueManager VALUE_MANAGER;
+
+		public static ValueManager Instance =>
+			VALUE_MANAGER == null ? VALUE_MANAGER = FindObjectOfType<ValueManager>() : VALUE_MANAGER;
 	}
 }

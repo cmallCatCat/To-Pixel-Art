@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace To_Pixel_Art
 {
-	public class DataManager
+	public static class DataManager
 	{
 		public static Dictionary<string, float> ParseData(string data)
 		{
@@ -20,5 +22,18 @@ namespace To_Pixel_Art
 			}
 			return result;
 		}
+		
+		public static string ConvertData(Dictionary<string, float> data)
+		{
+			StringBuilder result = new StringBuilder();
+			foreach (var kvp in data)
+			{
+				result.Append(kvp.Key);
+				result.Append(": ");
+				result.AppendLine(kvp.Value.ToString(CultureInfo.CurrentCulture));
+			}
+			return result.ToString();
+		}
+
 	}
 }

@@ -13,31 +13,34 @@ namespace To_Pixel_Art
 {
 	public static class MainLogic
 	{
-		public static Texture2D Work(string[] texture2DPaths, string targetPath, Settings settings, bool generate)
+		public static Texture2D Work(string[] texture2DPaths, string targetPath, string settingString, bool generate)
 		{
 			// 初始化
 			Texture2D   texture2D  = null;
 			Texture2D[] texture2Ds = LoadTexturesFromPaths(texture2DPaths);
-			settings.Deconstruct(
-				out int num, out PaletteType paletteType, out Palette palette, out int colorAmount,
-				out float bandwidth, out float edgeThreshold, out float brightness, out float saturation,
-				out float hue, out float contrast, out float polarization, out bool reduceNoise,
-				out float spatialSigma, out float colorSigma, out int filterRadius);
-			WorkerPalette worker;
-			switch (paletteType)
-			{
-				case PaletteType.Existent:
-					worker = new ExistWorkerPalette(num, palette);
-					break;
-				case PaletteType.KMeans:
-					worker = new KMeansWorkerPalette(num, colorAmount);
-					break;
-				case PaletteType.MeanShift:
-					worker = new MeanShiftWorkerPalette(num, bandwidth);
-					break;
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
+
+			Dictionary<string, float> settings      = DataManager.ParseData(settingString);
+			int                       num           = (int)settings["大小比例"];
+			PaletteType               paletteType   = (PaletteType)settings["调色板类型"];
+			Palette                   palette       = (Palette)settings["固定调色板"];
+			int                       colorAmount   = (int)settings["色彩数量"];
+			float                     bandwidth     = settings["带宽"];
+			float                     edgeThreshold = settings["描边强度"];
+			float                     brightness    = settings["亮度"];
+			float                     saturation    = settings["饱和度"];
+			float                     hue           = settings["色相"];
+			float                     contrast      = settings["对比度"];
+			float                     polarization  = settings["色彩极化"];
+			bool                      reduceNoise   = settings["启用降噪"] > 0f;
+			float                     spatialSigma  = settings["空间权重"];
+			float                     colorSigma    = settings["颜色权重"];
+			int                       filterRadius  = (int)settings["滤波器半径"];
+
+			WorkerPalette worker = paletteType switch
+			{ PaletteType.Existent  => new ExistWorkerPalette(num, palette),
+			  PaletteType.KMeans    => new KMeansWorkerPalette(num, colorAmount),
+			  PaletteType.MeanShift => new MeanShiftWorkerPalette(num, bandwidth),
+			  _                     => throw new ArgumentOutOfRangeException() };
 
 			for (int index = 0; index < texture2Ds.Length; index++)
 			{
@@ -60,10 +63,10 @@ namespace To_Pixel_Art
 				// 保存
 				if (!generate && index == 0)
 				{
-					return newTexture2D; //
+					return newTexture2D;
 				}
 				string newPath = ConvertPath(oldPath, targetPath);
-				Save(newPath, newTexture2D); //
+				Save(newPath, newTexture2D);
 			}
 			return texture2D;
 		}

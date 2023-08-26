@@ -103,12 +103,12 @@ namespace To_Pixel_Art.Editor
 
 			if (GUILayout.Button("Preview"))
 			{
-				preview = MainLogic.Work(paths, targetPath, settings, false);
+				// preview = MainLogic.Work(paths, targetPath, settings, false);
 			}
 
 			if (GUILayout.Button("Generate"))
 			{
-				MainLogic.Work(paths, targetPath, settings, true);
+				// MainLogic.Work(paths, targetPath, settings, true);
 			}
 
 			EditorGUILayout.EndHorizontal();

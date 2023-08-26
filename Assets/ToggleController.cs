@@ -17,14 +17,16 @@ public class ToggleController : MonoBehaviour
 	{
 		text.text = name;
 
-		ValueManager.Instance.SetDefaults(name, defaultValue);
-		reset.onClick.AddListener(ResetValue);
-		ValueManager.Instance.Register(toggle, name);
-	}
+		toggle.onValueChanged.AddListener(arg0 => { ValueManager.Instance.SetChangedValue(name, arg0 ? 1f : 0f); });
 
-	private void ResetValue()
-	{
-		ValueManager.Instance.ResetValue(toggle, name);
+		reset.onClick.AddListener(() => ValueManager.Instance.ResetValue(toggle, name));
+
+		ValueManager.Instance.SetDefaults(name, defaultValue);
+		ValueManager.Instance.RegisterValueChanged(name, arg0 =>
+		{
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			toggle.SetIsOnWithoutNotify(arg0 == 1f);
+		});
 	}
 
 	public void AddListener(UnityAction<bool> SetValue)

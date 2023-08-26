@@ -17,8 +17,8 @@ namespace To_Pixel_Art
 {
 	public static class ImageColorAdjuster
 	{
-		public static Texture2D AdjustImageColors(Texture2D inputTexture, float brightness, float contrast, float hue,
-			float                                           saturation)
+		public static Texture2D AdjustImageColors(
+			Texture2D inputTexture, float brightness, float contrast, float hue, float saturation)
 		{
 			// 将Unity Texture2D转换为ImageSharp Image
 			byte[]              inputData     = inputTexture.EncodeToPNG();
@@ -79,7 +79,7 @@ namespace To_Pixel_Art
 			}
 		}
 
-		
+
 		/// <summary>
 		/// 双边滤波降噪
 		/// </summary>

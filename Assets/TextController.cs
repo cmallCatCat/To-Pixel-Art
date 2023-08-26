@@ -11,4 +11,8 @@ public class TextController : MonoBehaviour
 		text.text = name;
 	}
 
+	public void SetText(string text)
+	{
+		this.text.text = text;
+	}
 }

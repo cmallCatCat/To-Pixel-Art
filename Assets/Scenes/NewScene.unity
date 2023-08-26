@@ -201,9 +201,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   titlePrefab: {fileID: 673577358267673779, guid: 299b12ac413496c4d8e9e709029a32ce, type: 3}
+  textPrefab: {fileID: 4972377644814078131, guid: fd1b51f4d5b436f438e8c49a34ad9e8a, type: 3}
   sliderPrefab: {fileID: 5869778740595000898, guid: 2161277f45044f04286a91f4ceb81d98, type: 3}
   enumPrefab: {fileID: 1178623928999283585, guid: 7aee35ee9435bff44b6954a2dbaf0ca7, type: 3}
   togglePrefab: {fileID: 8247761357022163482, guid: a519443fcf10c8e4b916ab6ef77180e7, type: 3}
+  buttonPrefab: {fileID: 2358035759255633667, guid: 4771b3d669ea57c448ec4f1a6821d607, type: 3}
+  imagePrefab: {fileID: 4497087425679514852, guid: 1a530647d7acdbd499fe69c10b1bcdde, type: 3}
 --- !u!114 &53952334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -216,6 +219,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00992870c195e18419912e446c7ed9eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  outPutPath: C:\Users\Administrator\Pictures
+  selectImage: 
 --- !u!1 &511564075
 GameObject:
   m_ObjectHideFlags: 0
@@ -419,7 +424,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 600, y: 800}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3

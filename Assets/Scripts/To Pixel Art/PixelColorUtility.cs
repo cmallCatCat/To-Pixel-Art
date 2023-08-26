@@ -80,10 +80,8 @@ namespace To_Pixel_Art
 		public static void ApplyPalette(
 			Texture2D newTexture2D, Texture2D texture2D, List<Color> palette, int num, float polarization)
 		{
-			Color[][] results = new Color[newTexture2D.width][];
 			for (int x = 0; x < newTexture2D.width; x++)
 			{
-				results[x] = new Color[newTexture2D.height];
 				for (int y = 0; y < newTexture2D.height; y++)
 				{
 					Color[] block = texture2D.GetPixels(x * num, y * num, num, num);
@@ -93,7 +91,6 @@ namespace To_Pixel_Art
 						Color average = ToPixel(block);
 						average = FindClosestColor(average, palette, polarization);
 						newTexture2D.SetPixel(x, y, average);
-						results[x][y] = average;
 					}
 				}
 			}
